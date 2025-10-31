@@ -5,8 +5,8 @@ import knightMoves from "./knightMoves.js";
 console.log("script executed")
 
 const board = new chessBoard(8);
-const knight = new knightPiece();
+const knight = new knightPiece([1, 3]);
 
 console.log(board.getBoard());
 console.log(knight.getCurrentPos());
-console.log(knightMoves([0, 1], [5, 6]));
+console.log(knight.getLegalMoves(8));
