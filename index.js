@@ -1,4 +1,4 @@
-import chessBoard from "./chessBoard.js"
+import chessBoard from "./classChessBoard.js"
 
 console.log("script executed")
 
