@@ -17,6 +17,10 @@ class knightPiece{
         return this.currentPosition;
     }
 
+    setNewPosition(position){
+        this.currentPosition = position;
+    }
+
     // function that returns an array of all possible moves, given it's current position and board size
     getLegalMoves(boardSize){
         let allLegalMoves;
