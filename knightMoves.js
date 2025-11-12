@@ -1,7 +1,6 @@
-import knightPiece from "./classKnight.js";
+import node from "./classNode.js";
 
 const visitedPositions = [];
-const boardSize = 8;
 
 // Function to check if two positions are matching.
 function arePositionsSame(pos1, pos2){
@@ -11,10 +10,10 @@ function arePositionsSame(pos1, pos2){
 };
 
 // Function to filter out positions that have been visited already.
-function removeVisitedPositions(arrayOfPositions){
-    let filteredPositions = arrayOfPositions.filter((position)=>{
-        for (let i = 0; i < visitedPositions.length; i++) {
-            const visited = visitedPositions[i];
+function removeVisitedPositions(arrayOfPositionsToVisit, alreadyVisitedNodeArray){
+    let filteredPositions = arrayOfPositionsToVisit.filter((position)=>{
+        for (let i = 0; i < alreadyVisitedNodeArray.length; i++) {
+            const visited = alreadyVisitedNodeArray[i].getPosition();
             if(visited[0] === position[0] && visited[1] === position[1]){
                 return false;
             }
@@ -24,64 +23,95 @@ function removeVisitedPositions(arrayOfPositions){
     return filteredPositions;
 };
 
-// Function that checks if given position is in the given array of positions
-function hasPositionBeenVisited(position, visitedPosArray){
-    for (let i = 0; i < visitedPosArray.length; i++) {
-        const element = visitedPosArray[i];
-        if(arePositionsSame(element, position)){return true;}
-    }
-    return false;
-};
-
 // Function that returns the shortest path from starting to end positions and number of moves.
 function knightMoves(startPos, endPos){
+
+    let shortestPathFound = false;
 
     if(arePositionsSame(startPos, endPos)){
         console.log("Reached position.");
         return 0;
     };
 
-    const chessPiece = new knightPiece(startPos);
-    const positionQueue = [];
+    const startingPosition = new node(startPos);
+    startingPosition.setDistance(0);
 
-    let totalMoves = 1;
-
-    visitedPositions.push(startPos);
-
-    let allPossibleMoves = removeVisitedPositions(chessPiece.getLegalMoves(boardSize));
-
-    positionQueue.push(allPossibleMoves);
+    const positionQueue = [startingPosition];
+    visitedPositions.push(startingPosition)
 
     while(positionQueue.length != 0){
-        const currentLevelPositions = positionQueue.shift();
-        const nextLevelPositions = [];
+        const currentPosition = positionQueue.shift();
 
-        console.log(`Current level positions to check:`)
-        console.log(currentLevelPositions)
+        const allVisitablePositions = removeVisitedPositions(currentPosition.getNeighbours(), visitedPositions);
 
-        // check all positions at current level if they match endPos. If not, generate next level positions.
-        while(currentLevelPositions.length != 0){
-            const nextPosition = currentLevelPositions.shift();
+        // loop through all visitable positions
+        while(allVisitablePositions.length != 0){
+            const currentVisitablePosition = allVisitablePositions.shift();
 
-            if(arePositionsSame(nextPosition, endPos)){
-                console.log(`Targeted position reached.`);
-                return totalMoves++;
-            };
+            const positionNode = new node(currentVisitablePosition);
 
-            chessPiece.setNewPosition(nextPosition);
-            console.log(`Move to position ${nextPosition}`)
+            //calculate current position distance from startPos
+            positionNode.setDistance(currentPosition.getDistance()+1)
 
-            const allLegalMoves = chessPiece.getLegalMoves(boardSize);
-            nextLevelPositions.push(...allLegalMoves);
-
+            positionQueue.push(positionNode);
+            visitedPositions.push(positionNode);
         };
-
-        positionQueue.push(nextLevelPositions);
-        totalMoves++;
-
     };
 
-    return totalMoves;
+    // Find endPost element within visitedPositions array
+    const endPosition = visitedPositions.find((element)=>{
+        return arePositionsSame(element.getPosition(),endPos);
+    });
+    const shortestRoute = [endPosition];
+
+    // Set array of backtrack nodes, including initial available backtrack nodes from endPos node
+    let backTrackNodes = visitedPositions.filter((visitedPosition)=>{
+        const neighbourNodes = endPosition.getNeighbours();
+        for(let i = 0; i < neighbourNodes.length; i++){
+            const neighbourNode = neighbourNodes[i];
+            if(arePositionsSame(visitedPosition.getPosition(), neighbourNode)){return true}
+        };
+        return false;
+    });
+
+    // Find the backtrack node that has the shortest distance from starting position
+    let shortestNode = null;
+
+    while(backTrackNodes.length != 0 && !shortestPathFound){
+        shortestNode = backTrackNodes.pop();
+
+        for(let i = 0; i < backTrackNodes.length; i++){
+            const backTrackNode = backTrackNodes[i];
+            if(arePositionsSame(backTrackNode.getPosition(), startPos)){
+                shortestPathFound = true;
+            }
+            if(shortestNode.getDistance() > backTrackNode.getDistance()){
+                shortestNode = backTrackNode;
+            }
+        };
+
+        // Clear the list of backtrack nodes
+        backTrackNodes.length = 0;
+
+        // Generate a new list of backtrack nodes from latest node with shortest path
+        backTrackNodes = visitedPositions.filter((visitedPosition)=>{
+            const neighbourNodes = shortestNode.getNeighbours();
+            for(let i = 0; i < neighbourNodes.length; i++){
+                const neighbourNode = neighbourNodes[i];
+                if(arePositionsSame(visitedPosition.getPosition(), neighbourNode)){return true}
+            };
+            return false;
+        });
+
+        shortestRoute.push(shortestNode);
+    };
+
+    // Return final result
+    let mainMessage = `Total moves needed: ${shortestRoute.length - 1}. Shortest path: \n`;
+    for(let i = shortestRoute.length - 1; i >= 0; i--){
+        mainMessage += `[${shortestRoute[i].getPosition()}]\n`
+    };
+    return mainMessage;
 };
 
 export default knightMoves;
