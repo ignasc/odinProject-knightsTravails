@@ -1,7 +1,5 @@
 import node from "./classNode.js";
 
-const visitedPositions = [];
-
 // Function to check if two positions are matching.
 function arePositionsSame(pos1, pos2){
     return (
@@ -33,12 +31,15 @@ function knightMoves(startPos, endPos){
         return 0;
     };
 
+    const visitedPositions = [];
+
     const startingPosition = new node(startPos);
     startingPosition.setDistance(0);
 
     const positionQueue = [startingPosition];
     visitedPositions.push(startingPosition)
 
+    // Traverse through all positions on chess board
     while(positionQueue.length != 0){
         const currentPosition = positionQueue.shift();
 
@@ -58,13 +59,13 @@ function knightMoves(startPos, endPos){
         };
     };
 
-    // Find endPost element within visitedPositions array
+    // Find end position element within visitedPositions array
     const endPosition = visitedPositions.find((element)=>{
         return arePositionsSame(element.getPosition(),endPos);
     });
     const shortestRoute = [endPosition];
 
-    // Set array of backtrack nodes, including initial available backtrack nodes from endPos node
+    // Set array of backtrack nodes and add initial available backtrack nodes from end position node.
     let backTrackNodes = visitedPositions.filter((visitedPosition)=>{
         const neighbourNodes = endPosition.getNeighbours();
         for(let i = 0; i < neighbourNodes.length; i++){
@@ -74,26 +75,27 @@ function knightMoves(startPos, endPos){
         return false;
     });
 
-    // Find the backtrack node that has the shortest distance from starting position
+    // Find the backtrack node that has the shortest distance value in the current list.
     let shortestNode = null;
-
     while(backTrackNodes.length != 0 && !shortestPathFound){
         shortestNode = backTrackNodes.pop();
 
         for(let i = 0; i < backTrackNodes.length; i++){
             const backTrackNode = backTrackNodes[i];
+
             if(arePositionsSame(backTrackNode.getPosition(), startPos)){
                 shortestPathFound = true;
             }
+
             if(shortestNode.getDistance() > backTrackNode.getDistance()){
                 shortestNode = backTrackNode;
             }
         };
 
-        // Clear the list of backtrack nodes
+        // Clear the list of current backtrack nodes.
         backTrackNodes.length = 0;
 
-        // Generate a new list of backtrack nodes from latest node with shortest path
+        // Generate a new list of backtrack nodes from latest node with shortest path.
         backTrackNodes = visitedPositions.filter((visitedPosition)=>{
             const neighbourNodes = shortestNode.getNeighbours();
             for(let i = 0; i < neighbourNodes.length; i++){
@@ -106,7 +108,7 @@ function knightMoves(startPos, endPos){
         shortestRoute.push(shortestNode);
     };
 
-    // Return final result
+    // Return final result message
     let mainMessage = `Total moves needed: ${shortestRoute.length - 1}. Shortest path: \n`;
     for(let i = shortestRoute.length - 1; i >= 0; i--){
         mainMessage += `[${shortestRoute[i].getPosition()}]\n`
